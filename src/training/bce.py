@@ -245,7 +245,7 @@ if __name__ == "__main__":
 
     # トレーナーを作成
     trainer = BCETrainer(
-        base_model=base_model.auto_model,
+        base_model=base_model,
         learning_rate=2e-5
     )
 

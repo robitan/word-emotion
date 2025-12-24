@@ -294,7 +294,7 @@ if __name__ == "__main__":
 
     # トレーナーを作成
     trainer = TripletTrainer(
-        base_model=base_model.auto_model,
+        base_model=base_model,
         learning_rate=2e-5,
         margin=0.3
     )

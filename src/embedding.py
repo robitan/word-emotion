@@ -28,7 +28,8 @@ class EmbeddingModel:
             normalize: L2正規化を適用するか
         """
         if device is None:
-            device = os.getenv("DEVICE", "cuda" if torch.cuda.is_available() else "cpu")
+            device = os.getenv(
+                "DEVICE", "cuda" if torch.cuda.is_available() else "cpu")
 
         self.device = device
         self.normalize = normalize
@@ -198,6 +199,10 @@ class FineTunableEmbedding(torch.nn.Module):
                 convert_to_tensor=True,
                 normalize_embeddings=False
             )
+
+        # inference_modeで作成されたテンソルをcloneして通常のテンソルに変換
+        # これにより勾配計算が可能になる
+        base_embeddings = base_embeddings.detach().clone()
 
         # 変換層を通す
         embeddings = self.projection(base_embeddings)

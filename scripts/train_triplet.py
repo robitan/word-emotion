@@ -55,7 +55,7 @@ def main():
     base_model = SentenceTransformer("BAAI/bge-m3")
 
     trainer = TripletTrainer(
-        base_model=base_model.auto_model,
+        base_model=base_model,
         learning_rate=learning_rate,
         margin=margin
     )

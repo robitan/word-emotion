@@ -61,13 +61,17 @@ class CorrespondenceAnalysis:
             # eigenvalues_から寄与率を計算
             eigenvalues = self.ca.eigenvalues_
             total_inertia = sum(eigenvalues)
-            self.explained_inertia = eigenvalues / total_inertia if total_inertia > 0 else eigenvalues
+            self.explained_inertia = eigenvalues / \
+                total_inertia if total_inertia > 0 else eigenvalues
         else:
             # デフォルト値を設定
-            self.explained_inertia = np.array([0.5, 0.3] + [0.0] * (self.n_components - 2))
+            self.explained_inertia = np.array(
+                [0.5, 0.3] + [0.0] * (self.n_components - 2))
 
-        print(f"  - Explained inertia: {self.explained_inertia[:self.n_components]}")
-        print(f"  - Total explained: {sum(self.explained_inertia[:self.n_components]):.2%}")
+        print(
+            f"  - Explained inertia: {self.explained_inertia[:self.n_components]}")
+        print(
+            f"  - Total explained: {sum(self.explained_inertia[:self.n_components]):.2%}")
 
         return self
 
