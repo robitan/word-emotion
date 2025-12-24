@@ -1,4 +1,4 @@
-.PHONY: build up down logs shell test baseline bce triplet ui clean
+.PHONY: build up down logs shell test baseline bce triplet k-mlp-bce k-mlp-triplet ui clean
 
 # Docker環境の構築
 build:
@@ -28,13 +28,21 @@ test:
 baseline:
 	docker compose exec app python scripts/build_baseline.py
 
-# BCE学習の実行
+# BCE学習の実行（1024次元）
 bce:
 	docker compose exec app python scripts/train_bce.py
 
-# Triplet学習の実行
+# Triplet学習の実行（1024次元）
 triplet:
 	docker compose exec app python scripts/train_triplet.py
+
+# BCE-MLP学習の実行（K次元）
+k-mlp-bce:
+	docker compose exec app python scripts/train_bce_mlp.py
+
+# Triplet-MLP学習の実行（K次元）
+k-mlp-triplet:
+	docker compose exec app python scripts/train_triplet_mlp.py
 
 # UIの起動
 ui:

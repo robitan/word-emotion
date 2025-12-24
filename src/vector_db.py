@@ -25,7 +25,9 @@ class VectorDB:
     COLLECTIONS = {
         "baseline": "words_baseline",
         "bce": "words_bce",
-        "triplet": "words_triplet"
+        "triplet": "words_triplet",
+        "bce_mlp": "words_bce_mlp",
+        "triplet_mlp": "words_triplet_mlp"
     }
 
     def __init__(

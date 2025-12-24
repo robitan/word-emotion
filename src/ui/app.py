@@ -115,11 +115,21 @@ def show_similarity_search(data, embedding_model, db, loader):
         top_k = st.number_input("上位K件", min_value=1, max_value=50, value=10)
 
     # DB選択
-    selected_dbs = st.multiselect(
-        "比較するベクトル空間を選択",
+    st.markdown("**1024次元空間（bge-m3ベース）**")
+    selected_dbs_1024 = st.multiselect(
+        "比較する空間を選択（1024次元）",
         ["Baseline", "BCE", "Triplet"],
-        default=["Baseline", "BCE", "Triplet"]
+        default=["Baseline"]
     )
+
+    st.markdown("**K次元空間（感情ラベル空間）**")
+    selected_dbs_k = st.multiselect(
+        "比較する空間を選択（K次元）",
+        ["BCE-MLP", "Triplet-MLP"],
+        default=[]
+    )
+
+    selected_dbs = selected_dbs_1024 + selected_dbs_k
 
     if st.button("検索") and word:
         if word not in data['word_emotions']:
@@ -130,7 +140,15 @@ def show_similarity_search(data, embedding_model, db, loader):
         results_dict = {}
 
         for db_name in selected_dbs:
-            db_type = db_name.lower()
+            # DB名をコレクション名に変換
+            db_type_map = {
+                "Baseline": "baseline",
+                "BCE": "bce",
+                "Triplet": "triplet",
+                "BCE-MLP": "bce_mlp",
+                "Triplet-MLP": "triplet_mlp"
+            }
+            db_type = db_type_map.get(db_name, db_name.lower())
 
             try:
                 results = db.search_by_word(
