@@ -1,29 +1,28 @@
 """
-Triplet-MLP学習実行スクリプト
+K-MLP-Triplet学習実行スクリプト
 
 感情ラベル空間（K次元）でTriplet Lossを使用して学習し、
 学習済み埋め込みをQdrantに登録する。
-BCE-MLPと同一の初期重みから開始して、損失関数のみを変更。
+K-MLP-BCEと同一の初期重みから開始して、損失関数のみを変更。
 """
 
+import torch
+from sentence_transformers import SentenceTransformer
+from src.training.triplet_mlp import TripletMLPTrainer, TripletMLPDataset
+from src.training.mlp_model import EmotionMLPHead
+from src.vector_db import VectorDB
+from src.embedding import EmbeddingModel
+from src.data_loader import EmotionDataLoader
 import sys
 import os
 
 # プロジェクトルートをパスに追加
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from src.data_loader import EmotionDataLoader
-from src.embedding import EmbeddingModel
-from src.vector_db import VectorDB
-from src.training.mlp_model import EmotionMLPHead
-from src.training.triplet_mlp import TripletMLPTrainer, TripletMLPDataset
-from sentence_transformers import SentenceTransformer
-import torch
-
 
 def main():
     print("=" * 80)
-    print("Triplet-MLP学習（感情ラベル空間K次元）")
+    print("K-MLP-Triplet学習（感情ラベル空間K次元）")
     print("=" * 80)
 
     # 設定
@@ -52,7 +51,7 @@ def main():
     # 3. MLPヘッドモデルの作成
     print("\n[3/6] MLPヘッドモデルの作成...")
 
-    # BCE-MLPと同一の初期重みで公平に比較するため、同じシードを設定
+    # K-MLP-BCEと同一の初期重みで公平に比較するため、同じシードを設定
     torch.manual_seed(42)
 
     model = EmotionMLPHead(
@@ -75,7 +74,7 @@ def main():
     print(f"  - データセットサイズ: {len(dataset)}")
 
     # 5. Triplet学習
-    print("\n[5/6] Triplet-MLP学習を開始...")
+    print("\n[5/6] K-MLP-Triplet学習を開始...")
     trainer = TripletMLPTrainer(
         model=model,
         learning_rate=learning_rate,
@@ -109,7 +108,7 @@ def main():
     print("\n[7/7] Qdrantに登録...")
     db = VectorDB(vector_dim=num_emotions)  # K次元
 
-    # Triplet-MLPコレクションを作成（既存の場合は再作成）
+    # K-MLP-Tripletコレクションを作成（既存の場合は再作成）
     db.create_collection("triplet_mlp", recreate=True)
 
     # 単語と埋め込みを登録
@@ -122,7 +121,7 @@ def main():
 
     # コレクション情報を表示
     info = db.get_collection_info("triplet_mlp")
-    print(f"\n[完了] Triplet-MLP学習が完了しました")
+    print(f"\n[完了] K-MLP-Triplet学習が完了しました")
     print(f"  - コレクション名: {info['name']}")
     print(f"  - 登録された単語数: {info['points_count']}")
     print(f"  - ベクトル次元: {num_emotions}")
@@ -139,8 +138,10 @@ def main():
 
     print(f"\n'{test_word}' の類似単語 (Top 5):")
     for i, result in enumerate(results):
-        emotions = ', '.join([data['emotion_map'].get(e, e) for e in result['emotions']])
-        print(f"  {i+1}. {result['word']} (score: {result['score']:.4f}) - [{emotions}]")
+        emotions = ', '.join([data['emotion_map'].get(e, e)
+                             for e in result['emotions']])
+        print(
+            f"  {i+1}. {result['word']} (score: {result['score']:.4f}) - [{emotions}]")
 
     print("\n" + "=" * 80)
     print("完了")

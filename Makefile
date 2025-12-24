@@ -36,11 +36,11 @@ bce:
 triplet:
 	docker compose exec app python scripts/train_triplet.py
 
-# BCE-MLP学習の実行（K次元）
+# K-MLP-BCE学習の実行（K次元）
 k-mlp-bce:
 	docker compose exec app python scripts/train_bce_mlp.py
 
-# Triplet-MLP学習の実行（K次元）
+# K-MLP-Triplet学習の実行（K次元）
 k-mlp-triplet:
 	docker compose exec app python scripts/train_triplet_mlp.py
 

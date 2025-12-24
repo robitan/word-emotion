@@ -99,7 +99,7 @@ make triplet
 - Qdrant の`words_triplet`コレクションに登録
 - デフォルト: 10 エポック（.env で変更可能）
 
-### 4. BCE-MLP 学習（オプション・K 次元）
+### 4. K-MLP-BCE 学習（オプション・K 次元）
 
 感情ラベル空間（K 次元）でマルチラベル分類として学習：
 
@@ -112,7 +112,7 @@ make k-mlp-bce
 - Qdrant の`words_bce_mlp`コレクションに登録
 - **損失関数のみで BCE vs Triplet を比較**
 
-### 5. Triplet-MLP 学習（オプション・K 次元）
+### 5. K-MLP-Triplet 学習（オプション・K 次元）
 
 同一 MLP ヘッドで Triplet Loss を使用：
 
@@ -120,7 +120,7 @@ make k-mlp-bce
 make k-mlp-triplet
 ```
 
-- BCE-MLP と**同一の初期重み**から開始
+- K-MLP-BCE と**同一の初期重み**から開始
 - 損失関数のみを変更（Triplet Loss）
 - Qdrant の`words_triplet_mlp`コレクションに登録
 

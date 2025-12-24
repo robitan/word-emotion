@@ -1,28 +1,27 @@
 """
-BCE-MLP学習実行スクリプト
+K-MLP-BCE学習実行スクリプト
 
 感情ラベル空間（K次元）でマルチラベル分類として学習し、
 学習済み埋め込みをQdrantに登録する。
 """
 
+import torch
+from sentence_transformers import SentenceTransformer
+from src.training.bce_mlp import BCEMLPTrainer, EmotionLabelDataset
+from src.training.mlp_model import EmotionMLPHead
+from src.vector_db import VectorDB
+from src.embedding import EmbeddingModel
+from src.data_loader import EmotionDataLoader
 import sys
 import os
 
 # プロジェクトルートをパスに追加
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from src.data_loader import EmotionDataLoader
-from src.embedding import EmbeddingModel
-from src.vector_db import VectorDB
-from src.training.mlp_model import EmotionMLPHead
-from src.training.bce_mlp import BCEMLPTrainer, EmotionLabelDataset
-from sentence_transformers import SentenceTransformer
-import torch
-
 
 def main():
     print("=" * 80)
-    print("BCE-MLP学習（感情ラベル空間K次元）")
+    print("K-MLP-BCE学習（感情ラベル空間K次元）")
     print("=" * 80)
 
     # 設定
@@ -73,7 +72,7 @@ def main():
     print(f"  - データセットサイズ: {len(dataset)}")
 
     # 5. BCE学習
-    print("\n[5/6] BCE-MLP学習を開始...")
+    print("\n[5/6] K-MLP-BCE学習を開始...")
     trainer = BCEMLPTrainer(
         model=model,
         learning_rate=learning_rate
@@ -106,7 +105,7 @@ def main():
     print("\n[7/7] Qdrantに登録...")
     db = VectorDB(vector_dim=num_emotions)  # K次元
 
-    # BCE-MLPコレクションを作成（既存の場合は再作成）
+    # K-MLP-BCEコレクションを作成（既存の場合は再作成）
     db.create_collection("bce_mlp", recreate=True)
 
     # 単語と埋め込みを登録
@@ -119,7 +118,7 @@ def main():
 
     # コレクション情報を表示
     info = db.get_collection_info("bce_mlp")
-    print(f"\n[完了] BCE-MLP学習が完了しました")
+    print(f"\n[完了] K-MLP-BCE学習が完了しました")
     print(f"  - コレクション名: {info['name']}")
     print(f"  - 登録された単語数: {info['points_count']}")
     print(f"  - ベクトル次元: {num_emotions}")
@@ -136,8 +135,10 @@ def main():
 
     print(f"\n'{test_word}' の類似単語 (Top 5):")
     for i, result in enumerate(results):
-        emotions = ', '.join([data['emotion_map'].get(e, e) for e in result['emotions']])
-        print(f"  {i+1}. {result['word']} (score: {result['score']:.4f}) - [{emotions}]")
+        emotions = ', '.join([data['emotion_map'].get(e, e)
+                             for e in result['emotions']])
+        print(
+            f"  {i+1}. {result['word']} (score: {result['score']:.4f}) - [{emotions}]")
 
     print("\n" + "=" * 80)
     print("完了")

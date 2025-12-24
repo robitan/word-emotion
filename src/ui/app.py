@@ -4,22 +4,20 @@
 Streamlitを使用して、異なるベクトル空間とCA分析結果を比較・可視化する。
 """
 
+from src.training.triplet import compute_emotion_vector
+from src.analysis.evaluation import StructureEvaluator
+from src.analysis.correspondence import CorrespondenceAnalysis
+from src.vector_db import VectorDB
+from src.embedding import EmbeddingModel
+from src.data_loader import EmotionDataLoader
+import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
+import plotly.express as px
+import streamlit as st
 import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
-
-import streamlit as st
-import plotly.express as px
-import plotly.graph_objects as go
-import pandas as pd
-import numpy as np
-
-from src.data_loader import EmotionDataLoader
-from src.embedding import EmbeddingModel
-from src.vector_db import VectorDB
-from src.analysis.correspondence import CorrespondenceAnalysis
-from src.analysis.evaluation import StructureEvaluator
-from src.training.triplet import compute_emotion_vector
 
 
 # ページ設定
@@ -125,7 +123,7 @@ def show_similarity_search(data, embedding_model, db, loader):
     st.markdown("**K次元空間（感情ラベル空間）**")
     selected_dbs_k = st.multiselect(
         "比較する空間を選択（K次元）",
-        ["BCE-MLP", "Triplet-MLP"],
+        ["K-MLP-BCE", "K-MLP-Triplet"],
         default=[]
     )
 
@@ -145,8 +143,8 @@ def show_similarity_search(data, embedding_model, db, loader):
                 "Baseline": "baseline",
                 "BCE": "bce",
                 "Triplet": "triplet",
-                "BCE-MLP": "bce_mlp",
-                "Triplet-MLP": "triplet_mlp"
+                "K-MLP-BCE": "bce_mlp",
+                "K-MLP-Triplet": "triplet_mlp"
             }
             db_type = db_type_map.get(db_name, db_name.lower())
 
@@ -324,7 +322,8 @@ def show_ca_visualization(data, ca, loader):
     if show_emotions:
         # 感情をプロット
         # 感情名に変換
-        emotion_names = [data['emotion_map'].get(e, e) for e in emotion_coords.index]
+        emotion_names = [data['emotion_map'].get(
+            e, e) for e in emotion_coords.index]
 
         fig.add_trace(go.Scatter(
             x=emotion_coords.iloc[:, 0],
@@ -357,7 +356,8 @@ def show_ca_visualization(data, ca, loader):
         neighbors = ca.get_neighbors(word, k=k, include_emotions=True)
 
         df_neighbors = pd.DataFrame(neighbors)
-        df_neighbors['distance'] = df_neighbors['distance'].apply(lambda x: f"{x:.4f}")
+        df_neighbors['distance'] = df_neighbors['distance'].apply(
+            lambda x: f"{x:.4f}")
 
         st.dataframe(df_neighbors, hide_index=True, use_container_width=True)
 
@@ -402,7 +402,8 @@ def show_structure_evaluation(data, ca, db, embedding_model, loader):
 
                 col1, col2 = st.columns(2)
                 with col1:
-                    st.metric("Spearman相関係数", f"{dist_corr['spearman_correlation']:.4f}")
+                    st.metric("Spearman相関係数",
+                              f"{dist_corr['spearman_correlation']:.4f}")
                 with col2:
                     st.metric("p値", f"{dist_corr['p_value']:.4e}")
 
@@ -417,30 +418,38 @@ def show_structure_evaluation(data, ca, db, embedding_model, loader):
                         "平均Jaccard係数": f"{overlap_result['mean_jaccard']:.4f}"
                     })
 
-                st.dataframe(pd.DataFrame(overlap_data), hide_index=True, use_container_width=True)
+                st.dataframe(pd.DataFrame(overlap_data),
+                             hide_index=True, use_container_width=True)
 
                 # 特定の単語の比較
                 st.subheader("3. 単語ごとの比較")
 
                 word = st.text_input("比較する単語を入力", placeholder="例: 喜び")
-                k_compare = st.number_input("比較する近傍数", min_value=1, max_value=20, value=10)
+                k_compare = st.number_input(
+                    "比較する近傍数", min_value=1, max_value=20, value=10)
 
                 if word and word in evaluator.common_words:
-                    comparison = evaluator.get_word_comparison(word, k=k_compare)
+                    comparison = evaluator.get_word_comparison(
+                        word, k=k_compare)
 
                     col1, col2 = st.columns(2)
 
                     with col1:
                         st.write(f"**CA空間での近傍**")
                         df_ca = pd.DataFrame(comparison['ca_neighbors'])
-                        df_ca['distance'] = df_ca['distance'].apply(lambda x: f"{x:.4f}")
-                        st.dataframe(df_ca, hide_index=True, use_container_width=True)
+                        df_ca['distance'] = df_ca['distance'].apply(
+                            lambda x: f"{x:.4f}")
+                        st.dataframe(df_ca, hide_index=True,
+                                     use_container_width=True)
 
                     with col2:
                         st.write(f"**ベクトル空間での近傍**")
-                        df_vector = pd.DataFrame(comparison['vector_neighbors'])
-                        df_vector['distance'] = df_vector['distance'].apply(lambda x: f"{x:.4f}")
-                        st.dataframe(df_vector, hide_index=True, use_container_width=True)
+                        df_vector = pd.DataFrame(
+                            comparison['vector_neighbors'])
+                        df_vector['distance'] = df_vector['distance'].apply(
+                            lambda x: f"{x:.4f}")
+                        st.dataframe(df_vector, hide_index=True,
+                                     use_container_width=True)
 
                     st.write(f"**オーバーラップ**: {comparison['overlap']}")
                     st.metric("Jaccard係数", f"{comparison['jaccard']:.4f}")

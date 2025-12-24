@@ -1,5 +1,5 @@
 """
-BCE-MLP学習モジュール
+K-MLP-BCE学習モジュール
 
 感情ラベル空間（K次元）へのマルチラベル分類として学習する。
 """
@@ -30,7 +30,8 @@ class EmotionLabelDataset(Dataset):
         """
         self.word_emotions = word_emotions
         self.emotion_symbols = sorted(emotion_map.keys())  # 感情シンボルを順序付け
-        self.emotion_to_idx = {e: i for i, e in enumerate(self.emotion_symbols)}
+        self.emotion_to_idx = {e: i for i,
+                               e in enumerate(self.emotion_symbols)}
         self.embedding_model = embedding_model
 
         # 感情が付与されている単語のみを使用
@@ -59,7 +60,7 @@ class EmotionLabelDataset(Dataset):
 
 
 class BCEMLPTrainer:
-    """BCE-MLP学習トレーナー"""
+    """K-MLP-BCE学習トレーナー"""
 
     def __init__(
         self,
@@ -74,7 +75,8 @@ class BCEMLPTrainer:
             device: デバイス
         """
         if device is None:
-            device = os.getenv("DEVICE", "cuda" if torch.cuda.is_available() else "cpu")
+            device = os.getenv(
+                "DEVICE", "cuda" if torch.cuda.is_available() else "cpu")
 
         self.device = device
         self.model = model.to(device)
@@ -147,7 +149,7 @@ class BCEMLPTrainer:
             shuffle=True
         )
 
-        print(f"Starting BCE-MLP training for {epochs} epochs...")
+        print(f"Starting K-MLP-BCE training for {epochs} epochs...")
         print(f"  - Training samples: {len(train_dataset)}")
         print(f"  - Batch size: {batch_size}")
         print(f"  - Learning rate: {self.optimizer.param_groups[0]['lr']}")
@@ -188,7 +190,7 @@ class BCEMLPTrainer:
 
 if __name__ == "__main__":
     # テスト
-    print("=== BCE-MLP学習モジュールのテスト ===")
+    print("=== K-MLP-BCE学習モジュールのテスト ===")
 
     from sentence_transformers import SentenceTransformer
     from src.embedding import EmbeddingModel
@@ -243,4 +245,4 @@ if __name__ == "__main__":
         batch_size=2
     )
 
-    print("BCE-MLP training test completed.")
+    print("K-MLP-BCE training test completed.")

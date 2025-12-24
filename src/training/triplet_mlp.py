@@ -1,8 +1,8 @@
 """
-Triplet-MLP学習モジュール
+K-MLP-Triplet学習モジュール
 
 感情ラベル空間（K次元）でTriplet Lossを使用して学習する。
-BCE-MLPと同一のMLPヘッドを使用し、損失関数のみを変更。
+K-MLP-BCEと同一のMLPヘッドを使用し、損失関数のみを変更。
 """
 
 import os
@@ -15,7 +15,7 @@ from tqdm import tqdm
 
 
 class TripletMLPDataset(Dataset):
-    """Triplet-MLPデータセット"""
+    """K-MLP-Tripletデータセット"""
 
     def __init__(
         self,
@@ -45,7 +45,7 @@ class TripletMLPDataset(Dataset):
 
 
 class TripletMLPTrainer:
-    """Triplet-MLP学習トレーナー"""
+    """K-MLP-Triplet学習トレーナー"""
 
     def __init__(
         self,
@@ -62,7 +62,8 @@ class TripletMLPTrainer:
             device: デバイス
         """
         if device is None:
-            device = os.getenv("DEVICE", "cuda" if torch.cuda.is_available() else "cpu")
+            device = os.getenv(
+                "DEVICE", "cuda" if torch.cuda.is_available() else "cpu")
 
         self.device = device
         self.margin = margin
@@ -155,7 +156,7 @@ class TripletMLPTrainer:
             shuffle=True
         )
 
-        print(f"Starting Triplet-MLP training for {epochs} epochs...")
+        print(f"Starting K-MLP-Triplet training for {epochs} epochs...")
         print(f"  - Training samples: {len(train_dataset)}")
         print(f"  - Batch size: {batch_size}")
         print(f"  - Learning rate: {self.optimizer.param_groups[0]['lr']}")
@@ -197,7 +198,7 @@ class TripletMLPTrainer:
 
 if __name__ == "__main__":
     # テスト
-    print("=== Triplet-MLP学習モジュールのテスト ===")
+    print("=== K-MLP-Triplet学習モジュールのテスト ===")
 
     from sentence_transformers import SentenceTransformer
     from src.embedding import EmbeddingModel
@@ -243,4 +244,4 @@ if __name__ == "__main__":
         batch_size=2
     )
 
-    print("Triplet-MLP training test completed.")
+    print("K-MLP-Triplet training test completed.")
