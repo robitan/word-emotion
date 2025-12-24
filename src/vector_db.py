@@ -163,16 +163,18 @@ class VectorDB:
         """
         collection_name = self.COLLECTIONS[collection_type]
 
-        results = self.client.search(
+        # query_pointsメソッドを使用（searchは廃止されました）
+        results = self.client.query_points(
             collection_name=collection_name,
-            query_vector=query_vector.tolist(),
+            query=query_vector.tolist(),
             limit=top_k,
-            score_threshold=score_threshold
+            score_threshold=score_threshold,
+            with_payload=True
         )
 
         # 結果を整形
         formatted_results = []
-        for result in results:
+        for result in results.points:
             formatted_results.append({
                 "word": result.payload["word"],
                 "score": result.score,
@@ -303,10 +305,14 @@ class VectorDB:
 
         info = self.client.get_collection(collection_name)
 
+        # ポイント数を取得（count メソッドを使用）
+        count_result = self.client.count(collection_name)
+        points_count = count_result.count if hasattr(count_result, 'count') else count_result
+
         return {
             "name": collection_name,
-            "vectors_count": info.vectors_count,
-            "points_count": info.points_count,
+            "vectors_count": points_count,  # ベクトル数 = ポイント数
+            "points_count": points_count,
             "status": info.status
         }
 

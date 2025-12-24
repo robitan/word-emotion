@@ -4,7 +4,7 @@ transformers>=4.30.0
 sentence-transformers>=2.2.0
 
 # Vector DB
-qdrant-client>=1.7.0
+qdrant-client>=1.11.0
 
 # Data processing
 pandas>=2.0.0

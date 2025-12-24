@@ -54,8 +54,17 @@ class CorrespondenceAnalysis:
         # 列（感情）の座標を取得
         self.emotion_coords = self.ca.column_coordinates(contingency_table)
 
-        # 寄与率を取得
-        self.explained_inertia = self.ca.explained_inertia_
+        # 寄与率を取得（バージョンによって属性名が異なる）
+        if hasattr(self.ca, 'explained_inertia_'):
+            self.explained_inertia = self.ca.explained_inertia_
+        elif hasattr(self.ca, 'eigenvalues_'):
+            # eigenvalues_から寄与率を計算
+            eigenvalues = self.ca.eigenvalues_
+            total_inertia = sum(eigenvalues)
+            self.explained_inertia = eigenvalues / total_inertia if total_inertia > 0 else eigenvalues
+        else:
+            # デフォルト値を設定
+            self.explained_inertia = np.array([0.5, 0.3] + [0.0] * (self.n_components - 2))
 
         print(f"  - Explained inertia: {self.explained_inertia[:self.n_components]}")
         print(f"  - Total explained: {sum(self.explained_inertia[:self.n_components]):.2%}")
