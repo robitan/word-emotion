@@ -5,6 +5,12 @@ K-MLP-BCE学習実行スクリプト
 学習済み埋め込みをQdrantに登録する。
 """
 
+import sys
+import os
+
+# プロジェクトルートをパスに追加
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 import torch
 from sentence_transformers import SentenceTransformer
 from src.training.bce_mlp import BCEMLPTrainer, EmotionLabelDataset
@@ -12,11 +18,6 @@ from src.training.mlp_model import EmotionMLPHead
 from src.vector_db import VectorDB
 from src.embedding import EmbeddingModel
 from src.data_loader import EmotionDataLoader
-import sys
-import os
-
-# プロジェクトルートをパスに追加
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
 def main():
@@ -25,7 +26,7 @@ def main():
     print("=" * 80)
 
     # 設定
-    epochs = int(os.getenv("BCE_EPOCHS", 10))
+    epochs = int(os.getenv("BCE_EPOCHS", 30))
     batch_size = int(os.getenv("BCE_BATCH_SIZE", 32))
     learning_rate = float(os.getenv("BCE_LEARNING_RATE", 2e-5))
     hidden_dim = int(os.getenv("MLP_HIDDEN_DIM", 256))

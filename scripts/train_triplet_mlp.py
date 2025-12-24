@@ -6,6 +6,12 @@ K-MLP-Triplet学習実行スクリプト
 K-MLP-BCEと同一の初期重みから開始して、損失関数のみを変更。
 """
 
+import sys
+import os
+
+# プロジェクトルートをパスに追加
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 import torch
 from sentence_transformers import SentenceTransformer
 from src.training.triplet_mlp import TripletMLPTrainer, TripletMLPDataset
@@ -13,11 +19,6 @@ from src.training.mlp_model import EmotionMLPHead
 from src.vector_db import VectorDB
 from src.embedding import EmbeddingModel
 from src.data_loader import EmotionDataLoader
-import sys
-import os
-
-# プロジェクトルートをパスに追加
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
 def main():
@@ -26,7 +27,7 @@ def main():
     print("=" * 80)
 
     # 設定
-    epochs = int(os.getenv("TRIPLET_EPOCHS", 10))
+    epochs = int(os.getenv("TRIPLET_EPOCHS", 30))
     batch_size = int(os.getenv("TRIPLET_BATCH_SIZE", 32))
     learning_rate = float(os.getenv("TRIPLET_LEARNING_RATE", 2e-5))
     margin = float(os.getenv("TRIPLET_MARGIN", 0.3))

@@ -156,15 +156,55 @@ class BCEMLPTrainer:
         print(f"  - Num emotions: {self.model.num_emotions}")
         print(f"  - Hidden dim: {self.model.hidden_dim}")
 
+        # ベストモデルのトラッキング
+        best_loss = float('inf')
+        best_epoch = 0
+
+        # チェックポイントディレクトリの作成
+        if save_path:
+            checkpoint_dir = os.path.join(
+                os.path.dirname(save_path), "bce_mlp_checkpoints"
+            )
+            os.makedirs(checkpoint_dir, exist_ok=True)
+
         for epoch in range(epochs):
             avg_loss = self.train_epoch(dataloader)
             print(f"Epoch {epoch+1}/{epochs} - Loss: {avg_loss:.4f}")
 
-        # モデルを保存
+            # 各エポックのチェックポイントを保存
+            if save_path:
+                checkpoint_path = os.path.join(
+                    checkpoint_dir, f"checkpoint_epoch_{epoch+1}.pth"
+                )
+                torch.save({
+                    'epoch': epoch + 1,
+                    'model_state_dict': self.model.state_dict(),
+                    'optimizer_state_dict': self.optimizer.state_dict(),
+                    'loss': avg_loss,
+                }, checkpoint_path)
+
+            # ベストモデルの更新
+            if avg_loss < best_loss:
+                best_loss = avg_loss
+                best_epoch = epoch + 1
+                if save_path:
+                    best_model_path = os.path.join(
+                        checkpoint_dir, "best_model.pth"
+                    )
+                    torch.save(self.model.state_dict(), best_model_path)
+                    print(f"  -> New best model! Loss: {best_loss:.4f}")
+
+        # 最終的にベストモデルを指定されたパスに保存
         if save_path:
             os.makedirs(os.path.dirname(save_path), exist_ok=True)
-            torch.save(self.model.state_dict(), save_path)
-            print(f"Model saved to {save_path}")
+            best_model_path = os.path.join(
+                checkpoint_dir, "best_model.pth"
+            )
+            # ベストモデルを最終的な保存先にコピー
+            import shutil
+            shutil.copy(best_model_path, save_path)
+            print(f"\nBest model (epoch {best_epoch}, loss: {best_loss:.4f}) saved to {save_path}")
+            print(f"All checkpoints saved to {checkpoint_dir}")
 
         return self.model
 
