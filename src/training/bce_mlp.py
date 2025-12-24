@@ -87,8 +87,9 @@ class BCEMLPTrainer:
             lr=learning_rate
         )
 
-        # 損失関数（BCEWithLogitsLoss）
-        self.criterion = nn.BCEWithLogitsLoss()
+        # 損失関数（BCELoss）
+        # モデル内でSigmoidが適用されるため、BCELossを使用
+        self.criterion = nn.BCELoss()
 
     def train_epoch(self, dataloader):
         """
@@ -108,11 +109,11 @@ class BCEMLPTrainer:
             texts, labels = batch
             labels = labels.to(self.device)
 
-            # 順伝播
-            logits = self.model(texts, return_probs=False)
+            # 順伝播（Sigmoid適用済みの出力を取得）
+            probs = self.model(texts)
 
-            # 損失を計算
-            loss = self.criterion(logits, labels)
+            # 損失を計算（BCELoss: Sigmoid適用済みの値を使用）
+            loss = self.criterion(probs, labels)
 
             # 逆伝播
             self.optimizer.zero_grad()

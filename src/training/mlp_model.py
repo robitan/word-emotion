@@ -46,32 +46,28 @@ class EmotionMLPHead(nn.Module):
             for param in self.base_model.parameters():
                 param.requires_grad = False
 
-        # MLPヘッド
+        # MLPヘッド: Linear → ReLU → Linear → Sigmoid
         base_dim = base_model.get_sentence_embedding_dimension()
 
         self.mlp = nn.Sequential(
-            nn.Linear(base_dim, hidden_dim),  # Linear1
-            nn.ReLU(),                         # ReLU
-            nn.Linear(hidden_dim, num_emotions)  # Linear2 (logits)
+            nn.Linear(base_dim, hidden_dim),     # Linear1
+            nn.ReLU(),                            # ReLU
+            nn.Linear(hidden_dim, num_emotions),  # Linear2
+            nn.Sigmoid()                          # Sigmoid
         )
-
-        # Sigmoid（推論・可視化用、学習時はBCEWithLogitsLossが使うので不要）
-        self.sigmoid = nn.Sigmoid()
 
     def forward(
         self,
-        texts: List[str],
-        return_probs: bool = False
+        texts: List[str]
     ) -> torch.Tensor:
         """
         順伝播
 
         Args:
             texts: テキストのリスト
-            return_probs: 確率を返すか（Sigmoidを適用）
 
         Returns:
-            logits (default) または probs (return_probs=True)
+            Sigmoid適用後の出力 (K次元、値は0-1の範囲)
         """
         # ベースモデルで埋め込みを取得
         with torch.no_grad():
@@ -84,13 +80,10 @@ class EmotionMLPHead(nn.Module):
         # inference_modeで作成されたテンソルをcloneして通常のテンソルに変換
         base_embeddings = base_embeddings.detach().clone()
 
-        # MLPヘッドを通す
-        logits = self.mlp(base_embeddings)
+        # MLPヘッド（Linear → ReLU → Linear → Sigmoid）を通す
+        output = self.mlp(base_embeddings)
 
-        if return_probs:
-            return self.sigmoid(logits)
-        else:
-            return logits
+        return output
 
     def get_emotion_embedding(
         self,
@@ -100,6 +93,9 @@ class EmotionMLPHead(nn.Module):
         """
         感情空間の埋め込みを取得（K次元）
 
+        Sigmoid適用後の値（0-1の範囲）を埋め込みとして使用。
+        BCEもTripletも同じ出力を使用する。
+
         Args:
             texts: テキストのリスト
             normalize: 正規化するか
@@ -107,13 +103,14 @@ class EmotionMLPHead(nn.Module):
         Returns:
             感情埋め込みベクトル (shape: [batch_size, K])
         """
-        logits = self.forward(texts, return_probs=False)
+        # Sigmoid適用後の出力を取得
+        sigmoid_output = self.forward(texts)
 
         if normalize:
             # L2正規化
-            embeddings = torch.nn.functional.normalize(logits, p=2, dim=1)
+            embeddings = torch.nn.functional.normalize(sigmoid_output, p=2, dim=1)
         else:
-            embeddings = logits
+            embeddings = sigmoid_output
 
         return embeddings
 
@@ -171,19 +168,19 @@ if __name__ == "__main__":
     # テスト
     texts = ["喜び という単語が示す感情", "悲しみ という単語が示す感情"]
 
-    # Logitsを取得
-    logits = model(texts, return_probs=False)
-    print(f"\nLogits shape: {logits.shape}")
-    print(f"Logits: {logits}")
+    # Sigmoid適用後の出力を取得
+    output = model(texts)
+    print(f"\nOutput shape: {output.shape}")
+    print(f"Output (0-1 range): {output}")
+    print(f"Min: {output.min().item():.4f}, Max: {output.max().item():.4f}")
 
-    # 確率を取得
-    probs = model(texts, return_probs=True)
-    print(f"\nProbs shape: {probs.shape}")
-    print(f"Probs: {probs}")
+    # 感情埋め込みを取得（正規化なし）
+    embeddings_unnorm = model.get_emotion_embedding(texts, normalize=False)
+    print(f"\nEmotion embeddings (unnormalized) shape: {embeddings_unnorm.shape}")
 
-    # 感情埋め込みを取得
-    embeddings = model.get_emotion_embedding(texts, normalize=True)
-    print(f"\nEmotion embeddings shape: {embeddings.shape}")
-    print(f"L2 norm: {torch.norm(embeddings, dim=1)}")
+    # 感情埋め込みを取得（正規化あり）
+    embeddings_norm = model.get_emotion_embedding(texts, normalize=True)
+    print(f"\nEmotion embeddings (normalized) shape: {embeddings_norm.shape}")
+    print(f"L2 norm: {torch.norm(embeddings_norm, dim=1)}")
 
     print("\nテスト完了")

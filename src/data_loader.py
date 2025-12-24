@@ -141,13 +141,21 @@ class EmotionDataLoader:
 
         return positive_pairs, negative_pairs
 
-    def get_triplets(self) -> List[Tuple[str, str, str]]:
+    def get_triplets(self, max_triplets_per_anchor: int = 10) -> List[Tuple[str, str, str]]:
         """
         Tripletデータを生成（Triplet学習用）
+
+        K-MLP-BCEと公平に比較するため、各anchorからサンプリングする
+        triplet数を制限する。
+
+        Args:
+            max_triplets_per_anchor: 各anchorから生成する最大triplet数
 
         Returns:
             (anchor, positive, negative) のリスト
         """
+        import random
+
         triplets = []
         words = list(self.word_emotions.keys())
 
@@ -181,12 +189,19 @@ class EmotionDataLoader:
                 elif similarity < 0.2:
                     negatives.append(word)
 
-            # Tripletを生成
-            for pos in positives:
-                for neg in negatives:
+            # Tripletを生成（各anchorからmax_triplets_per_anchor個まで）
+            if positives and negatives:
+                # 可能なtriplet数を計算
+                possible_triplets = len(positives) * len(negatives)
+                num_triplets = min(max_triplets_per_anchor, possible_triplets)
+
+                # ランダムにサンプリング
+                for _ in range(num_triplets):
+                    pos = random.choice(positives)
+                    neg = random.choice(negatives)
                     triplets.append((anchor, pos, neg))
 
-        print(f"Triplets: {len(triplets)}")
+        print(f"Triplets: {len(triplets)} (max {max_triplets_per_anchor} per anchor)")
         return triplets
 
     def create_contingency_table(self) -> pd.DataFrame:
